@@ -249,8 +249,8 @@ exports.createTaskNotification = functions.firestore
           type: "TASK_CREATE",
           taskName: snapshot.data().title,
           dueDate: snapshot.data().date,
-          assignedBy: snapshot.data().assignedBy.name,
-          assignedTo: snapshot.data().assignedTo.name,
+          assignedBy: snapshot.data().assignedBy.email,
+          assignedTo: snapshot.data().assignedTo.email,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           tid: content.params.tid,
         });
@@ -280,8 +280,8 @@ exports.updateTaskNotification = functions.firestore
             type: "TASK_COMPLETED",
             taskName: newValue.title,
             dueDate: newValue.date,
-            assignedBy: newValue.assignedBy.name,
-            assignedTo: newValue.assignedTo.name,
+            assignedBy: newValue.assignedBy.email,
+            assignedTo: newValue.assignedTo.email,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             tid: content.params.tid,
           });
@@ -299,8 +299,8 @@ exports.updateTaskNotification = functions.firestore
             type: "TASK_UPDATE",
             taskName: newValue.title,
             dueDate: newValue.date,
-            assignedBy: newValue.assignedBy.name,
-            assignedTo: newValue.assignedTo.name,
+            assignedBy: newValue.assignedBy.email,
+            assignedTo: newValue.assignedTo.email,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             tid: content.params.tid,
           });
@@ -328,7 +328,7 @@ exports.deleteTaskNotification = functions.firestore
           isRead: false,
           type: "TASK_DELETE",
           taskName: value.title,
-          deletedBy: value.assignedBy.name,
+          deletedBy: value.assignedBy.email,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           tid: content.params.tid,
         });
@@ -489,7 +489,7 @@ exports.updatePaperWorkNotification = functions.firestore
             type: "DOC_UPDATE",
             name: content.params.name,
             uploadedBy: newValue.creator,
-            lastModifiedBy: newValue.lastModified.uid,
+            lastModifiedBy: newValue.lastModified.email,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             tid: content.params.tid,
           });
