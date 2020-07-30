@@ -329,3 +329,12 @@ exports.testarray = (req, res) => {
       return res.json({ error: err.message });
     });
 };
+
+exports.invite = (req, res) => {
+  invitationMail(req.body.userName,
+            req.body.email,
+            req.body.tid,
+            req.body.name,
+            req.body.address,
+            req.body.role);
+}

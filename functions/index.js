@@ -34,6 +34,7 @@ const {
   getAllTransaction,
   getAllPeople,
   removeTransactionFromAllUser,
+  invite
 } = require("./handlers/transactions");
 const {
   addTodo,
@@ -99,6 +100,7 @@ app.post("/invite/:tid", Auth, invitationSystem);
 
 // Invitation Mail
 app.post("/email", invitationMail);
+app.post("/send-email", invite);
 
 // Core HTTP API for app
 exports.api = functions.https.onRequest(app);
@@ -253,6 +255,7 @@ exports.createTaskNotification = functions.firestore
           assignedTo: snapshot.data().assignedTo.email,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           tid: content.params.tid,
+          taskId: content.params.taskid,
         });
     });
   });
@@ -284,6 +287,7 @@ exports.updateTaskNotification = functions.firestore
             assignedTo: newValue.assignedTo.email,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             tid: content.params.tid,
+            taskId: content.params.taskid,
           });
       });
     } else {
@@ -303,6 +307,7 @@ exports.updateTaskNotification = functions.firestore
             assignedTo: newValue.assignedTo.email,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             tid: content.params.tid,
+            taskId: content.params.taskid,
           });
       });
     }
@@ -329,8 +334,10 @@ exports.deleteTaskNotification = functions.firestore
           type: "TASK_DELETE",
           taskName: value.title,
           deletedBy: value.assignedBy.email,
+          assignedTo: value.assignedTo.email,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           tid: content.params.tid,
+          taskId: content.params.taskid,
         });
     });
   });
@@ -355,6 +362,7 @@ exports.deleteInvitation = functions.firestore
           type: "INVITATION_RETRACTED",
           name: value.name,
           role: value.role,
+          email: value.email,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           tid: content.params.tid,
         });
@@ -381,6 +389,7 @@ exports.addPeopleNotification = functions.firestore
           type: "INVITATION_SENT",
           name: value.name,
           role: value.role,
+          email: value.email,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           tid: content.params.tid,
         });
@@ -407,6 +416,7 @@ exports.updatePeopleNotification = functions.firestore
           type: "INVITATION_ACCEPTED",
           name: value.name,
           role: value.role,
+          email: value.email,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           tid: content.params.tid,
         });
@@ -475,8 +485,7 @@ exports.updatePaperWorkNotification = functions.firestore
       .firestore()
       .collection("users")
       .where("transactions", "array-contains", content.params.tid);
-
-    if (isEqual(newValue.accessData, oldValue.accessData)) {
+    if(isEqual(newValue.accessData, oldValue.accessData)){
       const querySnapshot = await query.get();
       return querySnapshot.forEach((doc) => {
         firebase
@@ -494,13 +503,20 @@ exports.updatePaperWorkNotification = functions.firestore
             tid: content.params.tid,
           });
       });
-    } else {
+    } else{
       const newPermission = newValue.accessData;
       const oldPermission = oldValue.accessData;
-
+      
+      let permissionChangedObj = Object.keys(newPermission).reduce((a, k)=> {
+	    if (oldPermission[k] === undefined) {
+        	oldPermission[k] = 0;
+	    }
+	    a[k] = newPermission[k] - oldPermission[k]
+	    return a;
+	}, {});
       const querySnapshot = await query.get();
-      Object.keys(newPermission).forEach((key) => {
-        if (newPermission[key] !== oldPermission[key]) {
+      Object.keys(permissionChangedObj).forEach((key) => {
+        if ( permissionChangedObj[key]!==0 && newPermission[key] !== oldPermission[key]) {
           return querySnapshot.forEach((doc) => {
             firebase
               .firestore()
